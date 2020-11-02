@@ -3,8 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 #%matplotlib inline
-sns.set_palette("dark")
-sns.set_style("whitegrid")
+def sns_style():
+    sns.set_palette("dark")
+    sns.set_style("whitegrid")
 
 # Input data files are available in the read-only "../input/" directory
 # For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
@@ -55,17 +56,26 @@ def clean():
     new_dataframe_emission = pd.DataFrame(loct.index)
     new_dataframe_emission["Total Amount Emitted(In Kilotones)"] = loct.values
 
-table = pd.pivot_table(emission_table, values='value', index=['country_or_area', 'year'], columns=['category'])
+def dataframe():
+    table = pd.pivot_table(emission_table, values='value', index=['country_or_area', 'year'], columns=['category'])
+    gasnames = table.columns.values
+    data_div = pd.pivot_table(replaced_emission,values="value",index = ["country_or_area", "year"],columns = ["category"])
+    gases = data_div.columns.values
+    countries = area_div.columns.values
+
 def tableplot():
+    dataframe()
     '''Plots the contents of the table of data created in our Prepatory steps'''
     fig=table.plot()
     return fig
-gasnames = table.columns.values
+
 def country_plot(nameOfCountry):
+    dataframe()
     data = table.loc[nameOfCountry]
     plt.plot(data)
     plt.legend(gasnames,title='title', bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.title(nameOfCountry)
+
 def gascount():
     plt.figure(figsize=(15,7))
     ax = sns.countplot(replaced_emission["category"])
@@ -78,11 +88,13 @@ def gascount():
     return gascount
     #Calculating the Total amount of gases emitted
 def data():
-    data_div = pd.pivot_table(replaced_emission,values="value",index = ["country_or_area", "year"],columns = ["category"])
+    dataframe()
+    
     data_div.plot()
-gases = data_div.columns.values
+
 # lets define a function that can plot the country data 
 def plot_the_country(name):
+    dataframe()
     find = data_div.loc[name]
     plt.plot(find)
     plt.title(name)
@@ -94,16 +106,18 @@ def compare_plot():
     area_div = pd.pivot_table(replaced_emission, values='value', index=['category', 'year'], columns=['country_or_area'])
     print(area_div)
     sns.heatmap(area_div)
-countries = area_div.columns.values
+
 def country_wise_plot(name):
     ''' Individual COuntry wise pollutors'''
+    dataframe()
     cname = area_div.loc[name]
     plt.plot(cname)
     plt.tick_params(labelsize=14)
     plt.legend(countries, loc = "center left",bbox_to_anchor=(1, 0.5),fontsize = 18,ncol = 3)
     plt.rcParams["figure.figsize"] = [15, 10]
 #Comparing Countries By Passing Required Series
-def gas_accord_country1(gas_name, country_name):                          # years from 1990-2004
+def gas_accord_country1(gas_name, country_name):
+    compare_plot()                          # years from 1990-2004
     data = area_div.loc[gas_name]
     data.plot( y = country_name)
     plt.legend(country_name,loc = "center left",bbox_to_anchor=(1, 0.5),fontsize = 18,ncol = 2)
@@ -115,6 +129,7 @@ def gas_accord_country1(gas_name, country_name):                          # year
     
     
 def gas_accord_country2(gas_name, country_name):
+    compare_plot()
     data = area_div.loc[gas_name]
     data.plot( y = country_name)
     plt.legend(country_name,loc = "center left",bbox_to_anchor=(1, 0.5),fontsize = 18,ncol = 2)
