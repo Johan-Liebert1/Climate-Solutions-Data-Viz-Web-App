@@ -1,1 +1,5 @@
 .ipynb_checkpoints/
+.vscode/
+/frontend/node_modules/
+flask-climate/
+
