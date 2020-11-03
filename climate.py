@@ -2,22 +2,21 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 #%matplotlib inline
-def sns_style():
-    sns.set_palette("dark")
-    sns.set_style("whitegrid")
+sns.set_palette("dark")
+sns.set_style("whitegrid")
 
 # Input data files are available in the read-only "../input/" directory
 # For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
 
-import os
-dataset_url=https://www.kaggle.com/unitednations/international-greenhouse-gas-emissions
-import opendatasets as od
-od.download(dataset_url)
-data_dir = '/'
-emission_table = pd.read_csv("/kaggle/input/international-greenhouse-gas-emissions/greenhouse_gas_inventory_data_data.csv")   #Change thisss
 
-def prep():
+
+
+
+
+def get_table(emission_table):
+    emission_table = pd.read_csv("greenhouse_gas_inventory_data_data.csv") 
     pd.set_option('display.max_colwidth', -1)
     by_category  = emission_table.groupby(['category'])
     category_count = by_category.count()
@@ -37,9 +36,10 @@ def algo():
         new_category_index_reborn.append(lingo)
     short_category = ["co2","ghg(indirect co2)","ghg","hfc","ch4","nf3","n2o","pfc","sf6","hfc+pfc"]
     category_count["Shorted_category"] = short_category
+    return short_category
 
 def clean():
-    trying_emission = emission_table
+    trying_emission = get_table(emission_table)
     replaced_emission = trying_emission.replace(to_replace=["carbon_dioxide_co2_emissions_without_land_use_land_use_change_and_"
                                      "forestry_lulucf_in_kilotonne_co2_equivalent","greenhouse_gas_ghgs_emissions_including_indirect_co2"
                                     "_without_lulucf_in_kilotonne_co2_equivalent","greenhouse_gas_ghgs_emissions_without_land_use_land_use"
@@ -56,7 +56,8 @@ def clean():
     new_dataframe_emission = pd.DataFrame(loct.index)
     new_dataframe_emission["Total Amount Emitted(In Kilotones)"] = loct.values
 
-def dataframe():
+def dataframe(table=None,gases=None,countries=None,gasnames=None,data_div=None):
+    get_table(emission_table)
     table = pd.pivot_table(emission_table, values='value', index=['country_or_area', 'year'], columns=['category'])
     gasnames = table.columns.values
     data_div = pd.pivot_table(replaced_emission,values="value",index = ["country_or_area", "year"],columns = ["category"])
@@ -64,13 +65,13 @@ def dataframe():
     countries = area_div.columns.values
 
 def tableplot():
-    dataframe()
+    dataframe(table=table)
     '''Plots the contents of the table of data created in our Prepatory steps'''
     fig=table.plot()
     return fig
 
 def country_plot(nameOfCountry):
-    dataframe()
+    dataframe(table=table,gasnames=gasnames)
     data = table.loc[nameOfCountry]
     plt.plot(data)
     plt.legend(gasnames,title='title', bbox_to_anchor=(1.05, 1), loc='upper left')
@@ -87,14 +88,12 @@ def gascount():
     plt.show()
     return gascount
     #Calculating the Total amount of gases emitted
-def data():
-    dataframe()
-    
-    data_div.plot()
+
+
 
 # lets define a function that can plot the country data 
 def plot_the_country(name):
-    dataframe()
+    dataframe(data_div=data_div,gases=gases)
     find = data_div.loc[name]
     plt.plot(find)
     plt.title(name)
@@ -102,14 +101,14 @@ def plot_the_country(name):
     plt.tick_params(labelsize=12)
     plt.rcParams["figure.figsize"] = [15, 10]
     plt.xlim(2000,2014)
-def compare_plot():
+def compare_plot(area_div):
     area_div = pd.pivot_table(replaced_emission, values='value', index=['category', 'year'], columns=['country_or_area'])
     print(area_div)
     sns.heatmap(area_div)
 
 def country_wise_plot(name):
     ''' Individual COuntry wise pollutors'''
-    dataframe()
+    dataframe(countries=countries)
     cname = area_div.loc[name]
     plt.plot(cname)
     plt.tick_params(labelsize=14)
@@ -117,8 +116,8 @@ def country_wise_plot(name):
     plt.rcParams["figure.figsize"] = [15, 10]
 #Comparing Countries By Passing Required Series
 def gas_accord_country1(gas_name, country_name):
-    compare_plot()                          # years from 1990-2004
-    data = area_div.loc[gas_name]
+                              # years from 1990-2004
+    data = compare_plot(area_div).loc[gas_name]
     data.plot( y = country_name)
     plt.legend(country_name,loc = "center left",bbox_to_anchor=(1, 0.5),fontsize = 18,ncol = 2)
     plt.tick_params(labelsize=14)
@@ -139,13 +138,13 @@ def gas_accord_country2(gas_name, country_name):
     plt.rcParams["figure.figsize"] = [15, 10]
     plt.title(gas_name)
 #Cleaning the GHG & GHG(Indirect CO2) column
-def clean_data():
+def clean_data(cleaned_data=None,nf3_countries=None):
     data_div["GHG"].plot()
     cleaned_data = data_div
     cleaned_data["Check"] = cleaned_data["GHG"] - cleaned_data["GHG(Indirect CO2)"]
 
-nf3_data = cleaned_data[cleaned_data["NF3"].isnull()==False].reset_index()
-nf3_countries = nf3_data.groupby("country_or_area").count().index
+    nf3_data = cleaned_data[cleaned_data["NF3"].isnull()==False].reset_index()
+    nf3_countries = nf3_data.groupby("country_or_area").count().index
 #gas_accord_country1(gases[7],nf3_countries)
 
 #Checking Gas Emissions in a country
